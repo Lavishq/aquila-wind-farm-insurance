@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "./InsureWine.sol";
+import "./InsureWind.sol";
 
-contract DeployNewWineInsurancePolicy {
+contract DeployNewWindInsurancePolicy {
     address[] public insurancePolicies;
     mapping(address => address[]) public insurerOwnership;
     mapping(address => address[]) public clientOwnership;
@@ -17,7 +17,7 @@ contract DeployNewWineInsurancePolicy {
         string memory _lat,
         string memory _lon
     ) external payable {
-        InsureWine insurewine = (new InsureWine){value: _amount}(
+        InsureWind insurewind = (new InsureWind){value: _amount}(
             _link,
             _oracle,
             _amount,
@@ -27,7 +27,7 @@ contract DeployNewWineInsurancePolicy {
             _lat,
             _lon
         );
-        address insurancePolicyAddress = address(insurewine);
+        address insurancePolicyAddress = address(insurewind);
         insurancePolicies.push(insurancePolicyAddress);
         insurerOwnership[msg.sender].push(insurancePolicyAddress);
         clientOwnership[_client].push(insurancePolicyAddress);
@@ -39,7 +39,7 @@ contract DeployNewWineInsurancePolicy {
 
     function updateStateOfAllContracts() external {
         for (uint256 i = 0; i < insurancePolicies.length; i++) {
-            InsureWine insurancePolicy = InsureWine(insurancePolicies[i]);
+            InsureWind insurancePolicy = InsureWind(insurancePolicies[i]);
             insurancePolicy.updatestate();
         }
     }

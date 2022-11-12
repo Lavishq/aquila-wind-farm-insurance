@@ -15,7 +15,7 @@ import "./Datetime.sol";
 // oracle 0xfF07C97631Ff3bAb5e5e5660Cdf47AdEd8D4d4Fd
 // link 0xa36085F69e2889c224210F603D836748e7dC0088
 
-contract InsureWine is ChainlinkClient {
+contract InsureWind is ChainlinkClient {
     using Chainlink for Chainlink.Request;
 
     /* ========== CONSUMER STATE VARIABLES ========== */
