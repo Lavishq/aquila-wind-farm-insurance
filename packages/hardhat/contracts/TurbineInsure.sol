@@ -10,7 +10,7 @@ error Notexpired();
 // operator 0xB9756312523826A566e222a34793E414A81c88E1
 // link 0x326C977E6efc84E512bB9C30f76E30c160eD06FB
 
-contract InsureWind is ChainlinkClient {
+contract TurbineInsure is ChainlinkClient {
     using Chainlink for Chainlink.Request;
 
     /* ========== STATE VARIABLES ========== */

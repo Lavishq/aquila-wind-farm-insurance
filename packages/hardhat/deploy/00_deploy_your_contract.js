@@ -17,7 +17,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const { deployer } = await getNamedAccounts();
   const chainId = await getChainId();
 
-  await deploy("DeployNewWindInsurancePolicy", {
+  await deploy("TurbineInsuranceFactoryPolicy", {
     // Learn more about args here: https://www.npmjs.com/package/hardhat-deploy#deploymentsdeploy
     from: deployer,
     // args: [ "Hello", ethers.utils.parseEther("1.5") ],
@@ -26,8 +26,8 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   });
 
   // Getting a previously deployed contract
-  const DeployNewWindInsurancePolicy = await ethers.getContract(
-    "DeployNewWindInsurancePolicy",
+  const TurbineInsuranceFactoryPolicy = await ethers.getContract(
+    "TurbineInsuranceFactoryPolicy",
     deployer
   );
 
@@ -83,4 +83,4 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   //   console.error(error);
   // }
 };
-module.exports.tags = ["DeployNewWindInsurancePolicy"];
+module.exports.tags = ["TurbineInsuranceFactoryPolicy"];

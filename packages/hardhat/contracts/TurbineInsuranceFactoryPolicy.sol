@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "./InsureWind.sol";
+import "./TurbineInsure.sol";
 
-contract DeployNewWindInsurancePolicy {
+contract TurbineInsuranceFactoryPolicy {
     address[] public insurancePolicies;
     mapping(address => address[]) public insurerOwnership;
     mapping(address => address[]) public clientOwnership;
@@ -17,7 +17,7 @@ contract DeployNewWindInsurancePolicy {
         string memory _lat,
         string memory _lon
     ) external payable {
-        InsureWind insurewind = (new InsureWind){value: _amount}(
+        TurbineInsure insurewind = (new TurbineInsure){value: _amount}(
             _link,
             _oracle,
             _amount,
@@ -39,7 +39,7 @@ contract DeployNewWindInsurancePolicy {
 
     function updateStateOfAllContracts() external {
         for (uint256 i = 0; i < insurancePolicies.length; i++) {
-            InsureWind insurancePolicy = InsureWind(insurancePolicies[i]);
+            TurbineInsure insurancePolicy = TurbineInsure(insurancePolicies[i]);
             insurancePolicy.updatestate();
         }
     }
