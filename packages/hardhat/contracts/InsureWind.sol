@@ -4,59 +4,65 @@ pragma solidity ^0.8.4;
 import "@chainlink/contracts/src/v0.8/ChainlinkClient.sol";
 import "./Datetime.sol";
 
-/**
- * @title Wine Insurance Contract for Chainlink hackathon .
- * @author supernovahs.eth harshitsinghal252@gmail.com
- * @notice This contract is deployed every time a new insurance Policy is created.
- * @dev Uses @chainlink/contracts 0.4.0.
- */
+error Notexpired();
 
-// 28.613939,77.209021
-// oracle 0xfF07C97631Ff3bAb5e5e5660Cdf47AdEd8D4d4Fd
-// link 0xa36085F69e2889c224210F603D836748e7dC0088
+// 28.613939,97.209021
+// operator 0xB9756312523826A566e222a34793E414A81c88E1
+// link 0x326C977E6efc84E512bB9C30f76E30c160eD06FB
 
 contract InsureWind is ChainlinkClient {
     using Chainlink for Chainlink.Request;
 
-    /* ========== CONSUMER STATE VARIABLES ========== */
-
-    address public insurer;
-    address public client;
-    uint256 public duration;
+    /* ========== STATE VARIABLES ========== */
+    uint256 private constant DAYS_IN_SEC = 86400;
+    address public immutable insurer;
+    address public immutable client;
+    uint256 public immutable amount;
+    uint256 public immutable duration;
+    uint256 public immutable premium;
+    uint256 public months;
+    bytes32 jobIdLocationCurrentCondition = "7c276986e23b4b1c990d8659bca7a9d0";
     string public lat;
     string public lon;
-    uint256 public premium;
-    uint256 public constant DAYS_IN_SECONDS = 86400;
-    uint256 startTime;
-    bytes32 jobIdLocationCurrentCondition = "7c276986e23b4b1c990d8659bca7a9d0";
-    uint256 paymentToOracle;
-    int16 public temperatureTotal;
+    uint256 private startTime;
+    uint256 private paymentToOracle;
     DateTime public datetime;
-    uint256 public amount;
     bool public active;
     uint256 public requestCount;
-    bytes32 public reqId;
-    bytes32 public requestIdLocationkey;
     uint8 public premiumCounter;
-    uint8 public months;
+
+    uint16 public recentWindSpeed;
+    bytes32 public recentRequestId;
+    bool public requestIdUpdated;
+    uint256 private constant TIME_DIFFER_SEC = 21600;
+    CheckWindData public toCheckWind; // work
+    uint16 public recentRequestIdCounter;
 
     // Checking if the contract is active or not
     modifier ContractActive() {
         require(active, "Not active");
         _;
     }
+
     /** @dev Modifier to check msg.sender is the oracle only */
     modifier OnlyOracle() {
         require(msg.sender == getOracleAddress(), "Only Oracle can call");
         _;
     }
+
     /** @dev Modifier to check msg.sender is only the insurer */
     modifier OnlyInsurer() {
         require(msg.sender == insurer, "Only insurer can call");
         _;
     }
 
-    error Notexpired();
+    /** @dev Struct variables for Checking difference between 6 hour consequentive windSpeed below 15 mph*/
+    struct CheckWindData {
+        uint256 initWindSpeedTimestamp;
+        uint256 haltWindSpeedTimestamp;
+        uint8 timesChecked;
+        bool recently;
+    }
 
     /** @dev Struct for Weather data returned by the Accuweather Oracle */
     struct CurrentConditionsResult {
@@ -74,11 +80,9 @@ contract InsureWind is ChainlinkClient {
         uint8 weatherIcon;
     }
 
-    // Maps
+    mapping(uint256 => bytes32) public uintToRequestID;
     mapping(bytes32 => CurrentConditionsResult)
         public requestIdCurrentConditionsResult;
-
-    /* ========== CONSTRUCTOR ========== */
 
     /**
      * @param _link the LINK token address.
@@ -99,11 +103,12 @@ contract InsureWind is ChainlinkClient {
         uint256 _months,
         string memory _lat,
         string memory _lon
-    ) public payable {
+    ) payable {
         require(msg.value >= _amount, "Not enough sent ");
         insurer = _insurer;
         client = _client;
-        duration = _months * 30 * DAYS_IN_SECONDS;
+        duration = _months * 30 * DAYS_IN_SEC;
+        months = _months;
         lat = _lat;
         lon = _lon;
         premium = ((_amount * 5) / 1000) * _months;
@@ -120,37 +125,12 @@ contract InsureWind is ChainlinkClient {
 
     /** @dev This function is intended to be called by the insurer everyday to record the relevant parameters for claim processing */
     function updatestate() external {
-        string memory metric = "metric";
-        requestLocationCurrentConditions(paymentToOracle, lat, lon, metric);
+        requestIdUpdated = false;
+        requestLocationCurrentConditions(paymentToOracle, lat, lon, "imperial");
     }
-
-    /** @dev Checks that the premium payments by client are well before the month expiry, else it calls forfeiture() */
-    function CheckForfeiture() external {
-        uint8 counter = premiumCounter;
-        uint256 currentblocktimestamp = block.timestamp;
-        uint256 starttime = startTime;
-        uint256 _duration = duration;
-        uint256 _months = months;
-        for (uint256 i = _months; i > 0; i--) {
-            if (
-                currentblocktimestamp > (_months * 30 * 86400) + starttime &&
-                counter > _months - i
-            ) {
-                forfeiture();
-            }
-        }
-    }
-
-    /** @dev Transfers all the balance (including premium ) to the insurer */
-    function forfeiture() internal {
-        payable(insurer).transfer(address(this).balance);
-    }
-
-    /* ========== CONSUMER REQUEST FUNCTIONS ========== */
 
     /**
      * @notice Returns the current weather conditions of a location for the given coordinates.
-     
      * @param _payment the LINK amount in Juels (i.e. 10^18 aka 1 LINK).
      * @param _lat the latitude (WGS84 standard, from -90 to 90).
      * @param _lon the longitude (WGS84 standard, from -180 to 180).
@@ -167,26 +147,15 @@ contract InsureWind is ChainlinkClient {
             address(this),
             this.fulfillLocationCurrentConditions.selector
         );
-
-        req.add("endpoint", "location-current-conditions"); // NB: not required if it has been hardcoded in the job spec
         req.add("lat", _lat);
         req.add("lon", _lon);
         req.add("units", _units);
-
-        reqId = sendChainlinkRequest(req, _payment);
+        recentRequestId = sendChainlinkRequest(req, _payment);
+        recentRequestIdCounter++;
+        uintToRequestID[recentRequestIdCounter] = recentRequestId;
     }
 
-    /* ========== CONSUMER FULFILL FUNCTIONS ========== */
-
-    /**
-     * @notice Consumes the data returned by the node job on a particular request.
-     * @dev Only when `_locationFound` is true, both `_locationFound` and `_currentConditionsResult` will contain
-     * meaningful data (as bytes). This function body is just an example of usage.
-     * @param _requestId the request ID for fulfillment.
-     * @param _locationFound true if a location was found for the given coordinates, otherwise false.
-     * @param _locationResult the location information (encoded as LocationResult).
-     * @param _currentConditionsResult the current weather conditions (encoded as CurrentConditionsResult).
-     */
+    /// @notice Consumes the data returned by the node job on a particular request.
     function fulfillLocationCurrentConditions(
         bytes32 _requestId,
         bool _locationFound,
@@ -198,8 +167,6 @@ contract InsureWind is ChainlinkClient {
         }
     }
 
-    /* ========== PRIVATE FUNCTIONS ========== */
-
     function storeCurrentConditionsResult(
         bytes32 _requestId,
         bytes memory _currentConditionsResult
@@ -208,16 +175,37 @@ contract InsureWind is ChainlinkClient {
             _currentConditionsResult,
             (CurrentConditionsResult)
         );
-        uint256 time = result.timestamp;
+
         requestIdCurrentConditionsResult[_requestId] = result;
 
         requestCount += 1;
+        recentWindSpeed = result.windSpeed;
+        requestIdUpdated = true;
+        checkWindSpeedStore(result.timestamp, recentWindSpeed);
+    }
 
-        if (datetime.getMonth(time) >= 3 && datetime.getMonth(time) <= 9) {
-            temperatureTotal += result.temperature;
+    /// @notice if client or insurer checks at least 5 times and the windSpeed is below 15 mph for more than 6 hours then Payout is triggered
+    function checkWindSpeedStore(uint256 _timestamp, uint256 _windSpeed)
+        internal
+    {
+        if (_windSpeed < 15) {
+            toCheckWind.recently = true;
+            toCheckWind.timesChecked += 1;
+            toCheckWind.haltWindSpeedTimestamp = _timestamp;
+            if (toCheckWind.timesChecked > 4) {
+                payIfSixHourPassed();
+            }
+        } else {
+            toCheckWind.recently = false;
+            toCheckWind.timesChecked = 0;
+            toCheckWind.initWindSpeedTimestamp = _timestamp;
         }
-        // the temperature is returned 10 times the actual , so mulitplied the limits by 10 .
-        if (temperatureTotal > 27000 || temperatureTotal < 22000) {
+    }
+
+    function payIfSixHourPassed() private {
+        uint256 differInSpeed = toCheckWind.haltWindSpeedTimestamp -
+            toCheckWind.initWindSpeedTimestamp;
+        if (differInSpeed > TIME_DIFFER_SEC) {
             payoutFunction();
         }
     }
@@ -229,10 +217,31 @@ contract InsureWind is ChainlinkClient {
         active = false;
     }
 
+    /** @dev Checks that the premium payments by client are well before the month expiry, else it calls forfeiture() */
+    function checkForfeiture() external {
+        uint8 counter = premiumCounter;
+        uint256 currentblocktimestamp = block.timestamp;
+        // uint256 _duration = duration;
+        uint256 _months = months;
+        for (uint256 i = _months; i > 0; i--) {
+            if (
+                currentblocktimestamp > (_months * 30 * 86400) + startTime &&
+                counter > _months - i
+            ) {
+                forfeiture();
+            }
+        }
+    }
+
+    /** @dev Transfers all the balance (including premium ) to the insurer */
+    function forfeiture() internal {
+        payable(insurer).transfer(address(this).balance);
+    }
+
     /** @dev Checks if insurer called the update status function everyday, except 1 day for emergency , tranfers full amount to insurer */
     /**  @dev Else tranfers double premium back to client as penalty to the  insurer*/
     function RepayInsurer() internal ContractActive {
-        if (requestCount >= duration / DAYS_IN_SECONDS - 1) {
+        if (requestCount >= duration / DAYS_IN_SEC - 1) {
             payable(insurer).transfer(address(this).balance);
         } else {
             payable(client).transfer(premium * months * 2);
@@ -247,13 +256,12 @@ contract InsureWind is ChainlinkClient {
     }
 
     /* ========== OTHER FUNCTIONS ========== */
-
     function getOracleAddress() public view returns (address) {
         return chainlinkOracleAddress();
     }
 
     /** @dev Insurer can withdraw the link supplied to call the oracle  */
-    function withdrawLink() public OnlyInsurer {
+    function withdrawLink() external OnlyInsurer {
         LinkTokenInterface linkToken = LinkTokenInterface(
             chainlinkTokenAddress()
         );
