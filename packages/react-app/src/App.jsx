@@ -16,7 +16,6 @@ import "./App.css";
 import {
   Account,
   Contract,
-  Faucet,
   GasGauge,
   Header,
   Ramp,
@@ -30,7 +29,6 @@ import externalContracts from "./contracts/external_contracts";
 // contracts
 import deployedContracts from "./contracts/hardhat_contracts.json";
 import { getRPCPollTime, Transactor, Web3ModalSetup } from "./helpers";
-import { Home, ExampleUI, Hints, Subgraph } from "./views";
 import { useStaticJsonRPC } from "./hooks";
 
 const { ethers } = require("ethers");
