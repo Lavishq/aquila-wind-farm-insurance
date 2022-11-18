@@ -32,7 +32,7 @@ export default function CreateInsurance({
 
   // const provider = new ethers.providers.Web3Provider(window.ethereum);
   // const createNewInsurace = async (address) => {
-  //   const game = new ethers.Contract(address, abiContract, signer);
+  //   const game = new ethers.Contract(address, abiContract, provider);
   //   const result = await game.createNewPolicy(linkAddress, oracleAddress, amount, client, lat, lon, {
   //     value: amount, gasLimit: 200000,
   //   });

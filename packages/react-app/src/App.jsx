@@ -309,13 +309,15 @@ function App(props) {
       <Switch>
         <Route exact path="/create-insurance">
           <CreateInsurance
-            address={address}
             name="TurbineInsuranceFactoryPolicy"
-            price={price}
+            address={"0x4952c0F78e63b775FbA724B9DB0f30b0Da86c1F4"}
+            writeContracts={writeContracts}
             signer={userSigner}
             provider={localProvider}
             blockExplorer={blockExplorer}
+            localChainId={localChainId}
             contractConfig={contractConfig}
+            price={price}
           />
           {/* <Contract
             name="TurbineInsuranceFactoryPolicy"
