@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 export default function ExampleUI({}) {
   return (
     <div>
@@ -75,6 +77,9 @@ export default function ExampleUI({}) {
           creates a new Insurance which takes amount, clientAddress, months the contract is supposed to be insured as
           well as exact location in the form of lat (latitudes) and lon (longitudes). msg.sender is insurer, please make
           sure to enter the amount in transaction value as well{" "}
+          <strong>
+            Alternative you can go to <Link to={"/create-insurance"}>Create Insurance</Link>
+          </strong>
         </h4>
         <h4 style={{ padding: 14 }}>
           <em>

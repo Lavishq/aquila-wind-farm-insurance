@@ -30,11 +30,11 @@ export default function CreateInsurance({
 
   const linkAddress = "0x326C977E6efc84E512bB9C30f76E30c160eD06FB";
   const oracleAddress = "0xB9756312523826A566e222a34793E414A81c88E1";
-  const [client, setClient] = useState("0xBeA5dD2179E81C115b2008A8F89807Df66f3251c");
-  const [amount, setAmount] = useState("1"); // just 1 wei
-  const [month, setMonth] = useState("1");
-  const [lat, setLat] = useState("28.613939"); // 28.613939
-  const [lon, setLon] = useState("97.209021"); // 97.209021
+  const [client, setClient] = useState();
+  const [amount, setAmount] = useState(); // just 1 wei
+  const [month, setMonth] = useState();
+  const [lat, setLat] = useState(); // 28.613939
+  const [lon, setLon] = useState(); // 97.209021
 
   function clientHandler(event) {
     setClient(event.target.value);
@@ -55,13 +55,15 @@ export default function CreateInsurance({
   const tx = Transactor(signer, gasPrice);
 
   const createNewInsurace = async () => {
-    console.log(writeContracts[0]);
-    await tx(
-      writeContracts.TurbineInsuranceFactoryPolicy.createNewPolicy(amount, client, month, lat, lon, {
-        value: amount,
-        gasLimit: 200000,
-      }),
-    );
+    // console.log(writeContracts[0]);
+    if (client && amount && month && lat && lon) {
+      await tx(
+        writeContracts.TurbineInsuranceFactoryPolicy.createNewPolicy(amount, client, month, lat, lon, {
+          value: amount,
+          gasLimit: 200000,
+        }),
+      );
+    }
   };
 
   return (
