@@ -5,10 +5,10 @@ import "@chainlink/contracts/src/v0.8/ChainlinkClient.sol";
 import "./Datetime.sol";
 
 error Notexpired();
+error NotEnoughSent();
 
-// 28.613939,97.209021
-// operator 0xB9756312523826A566e222a34793E414A81c88E1
-// link 0x326C977E6efc84E512bB9C30f76E30c160eD06FB
+// 28.613939
+// 97.209021
 
 contract TurbineInsure is ChainlinkClient {
     using Chainlink for Chainlink.Request;
@@ -20,6 +20,8 @@ contract TurbineInsure is ChainlinkClient {
     uint256 public immutable amount;
     uint256 public immutable duration;
     uint256 public immutable premium;
+    address public constant LINK = 0x326C977E6efc84E512bB9C30f76E30c160eD06FB;
+    address public constant ORACLE = 0xB9756312523826A566e222a34793E414A81c88E1;
     uint256 public months;
     bytes32 jobIdLocationCurrentCondition = "7c276986e23b4b1c990d8659bca7a9d0";
     string public lat;
@@ -85,8 +87,6 @@ contract TurbineInsure is ChainlinkClient {
         public requestIdCurrentConditionsResult;
 
     /**
-     * @param _link the LINK token address.
-     * @param _oracle the Operator.sol contract address.
      * @param _amount the amount of insurance the Policy will cover.
      * @param _client the client address.
      * @param _insurer the insurer address.
@@ -95,8 +95,6 @@ contract TurbineInsure is ChainlinkClient {
      * @param _lon the longitude of the location.
      */
     constructor(
-        address _link,
-        address _oracle,
         uint256 _amount,
         address _client,
         address _insurer,
@@ -114,8 +112,8 @@ contract TurbineInsure is ChainlinkClient {
         premium = ((_amount * 5) / 1000) * _months;
         startTime = block.timestamp;
         amount = _amount;
-        setChainlinkToken(_link);
-        setChainlinkOracle(_oracle);
+        setChainlinkToken(LINK);
+        setChainlinkOracle(ORACLE);
         jobIdLocationCurrentCondition = "7c276986e23b4b1c990d8659bca7a9d0";
         paymentToOracle = 100000000000000000;
         datetime = new DateTime();
@@ -273,7 +271,9 @@ contract TurbineInsure is ChainlinkClient {
 
     /** @dev Client pays premium  */
     function payPremium() external payable {
-        require(msg.value == premium, "Not enough sent ");
+        if (!(msg.value == premium)) {
+            revert NotEnoughSent();
+        }
         premiumCounter -= 1;
     }
 }

@@ -9,8 +9,6 @@ contract TurbineInsuranceFactoryPolicy {
     mapping(address => address[]) public clientOwnership;
 
     function createNewPolicy(
-        address _link,
-        address _oracle,
         uint256 _amount,
         address _client,
         uint256 months,
@@ -18,8 +16,6 @@ contract TurbineInsuranceFactoryPolicy {
         string memory _lon
     ) external payable {
         TurbineInsure insurewind = (new TurbineInsure){value: _amount}(
-            _link,
-            _oracle,
             _amount,
             _client,
             msg.sender,

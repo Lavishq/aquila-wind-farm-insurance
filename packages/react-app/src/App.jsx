@@ -1,5 +1,5 @@
-import { Button, Col, Menu, Row } from "antd";
-
+import { GithubFilled } from "@ant-design/icons";
+import { Button, Col, Divider, Menu, Row } from "antd";
 import "antd/dist/antd.css";
 import {
   useBalance,
@@ -26,36 +26,23 @@ import {
   NetworkSwitch,
 } from "./components";
 import { NETWORKS, ALCHEMY_KEY } from "./constants";
-import externalContracts from "./contracts/external_contracts";
+// import externalContracts from "./contracts/external_contracts";
 // contracts
 import deployedContracts from "./contracts/hardhat_contracts.json";
+import turbineContracts from "./contracts/turnbine.json";
 import { getRPCPollTime, Transactor, Web3ModalSetup } from "./helpers";
 import { useStaticJsonRPC } from "./hooks";
 
+// /// my imports
+// import AllInsurance from "./pages/AllInsurance";
+import CreateInsurance from "./pages/CreateInsurance";
+import Home from "./pages/Home";
+import YourInsurance from "./pages/YourInsurance";
+
 const { ethers } = require("ethers");
-/*
-    Welcome to 🏗 scaffold-eth !
 
-    Code:
-    https://github.com/scaffold-eth/scaffold-eth
-
-    Support:
-    https://t.me/joinchat/KByvmRe5wkR-8F_zz6AjpA
-    or DM @austingriffith on twitter or telegram
-
-    You should get your own Alchemy.com & Infura.io ID and put it in `constants.js`
-    (this is your connection to the main Ethereum network for ENS etc.)
-
-
-    🌏 EXTERNAL CONTRACTS:
-    You can also bring in contract artifacts in `constants.js`
-    (and then use the `useExternalContractLoader()` hook!)
-*/
-
-// 😬 Sorry for all the console logging
 const DEBUG = true;
 const NETWORKCHECK = true;
-const USE_BURNER_WALLET = true; // toggle burner wallet feature
 const USE_NETWORK_SELECTOR = false;
 
 const web3Modal = Web3ModalSetup();
@@ -68,18 +55,12 @@ const providers = [
 ];
 
 function App(props) {
-  // specify all the chains your app is available on. Eg: ['localhost', 'mainnet', ...otherNetworks ]
-  // reference './constants.js' for other networks
-  const networkOptions = ["goerli"];
-
   const [injectedProvider, setInjectedProvider] = useState();
   const [address, setAddress] = useState();
-  const [selectedNetwork, setSelectedNetwork] = useState(networkOptions[0]);
+  const [selectedNetwork, setSelectedNetwork] = useState("goerli");
   const location = useLocation();
 
   const targetNetwork = NETWORKS[selectedNetwork];
-
-  // 🔭 block explorer URL
   const blockExplorer = targetNetwork.blockExplorer;
 
   // load all your providers
@@ -114,7 +95,7 @@ function App(props) {
   /* 🔥 This hook will get the price of Gas from ⛽️ EtherGasStation */
   const gasPrice = useGasPrice(targetNetwork, "fast", localProviderPollingTime);
   // Use your injected provider from 🦊 Metamask or if you don't have it then instantly generate a 🔥 burner wallet.
-  const userProviderAndSigner = useUserProviderAndSigner(injectedProvider, localProvider, USE_BURNER_WALLET);
+  const userProviderAndSigner = useUserProviderAndSigner(injectedProvider, localProvider);
   const userSigner = userProviderAndSigner.signer;
 
   useEffect(() => {
@@ -145,7 +126,7 @@ function App(props) {
 
   // const contractConfig = useContractConfig();
 
-  const contractConfig = { deployedContracts: deployedContracts || {}, externalContracts: externalContracts || {} };
+  const contractConfig = { deployedContracts: deployedContracts || {} };
 
   // Load in your local 📝 contract and read a value from it:
   const readContracts = useContractLoader(localProvider, contractConfig);
@@ -153,27 +134,19 @@ function App(props) {
   // If you want to make 🔐 write transactions to your contracts, use the userSigner:
   const writeContracts = useContractLoader(userSigner, contractConfig, localChainId);
 
-  // EXTERNAL CONTRACT EXAMPLE:
-  //
-  // If you want to bring in the mainnet DAI contract it would look like:
-  const mainnetContracts = useContractLoader(mainnetProvider, contractConfig);
-
   // If you want to call a function on a new block
   // useOnBlock(mainnetProvider, () => {
   //   console.log(`⛓ A new mainnet block is here: ${mainnetProvider._lastBlockNumber}`);
   // });
 
-  // keep track of a variable from the contract in the local React state:
-  const purpose = useContractReader(readContracts, "", "insurancePolicies", [], localProviderPollingTime);
+  const contractConfigTurbine = { turbineContracts: turbineContracts || {} };
+  const readContractInsured = useContractLoader(localProvider, contractConfigTurbine);
+  const writeContractInsured = useContractLoader(userSigner, contractConfigTurbine, localChainId);
 
-  /*
-  const addressFromENS = useResolveName(mainnetProvider, "austingriffith.eth");
-  console.log("🏷 Resolved austingriffith.eth as:", addressFromENS)
-  */
+  const allInsureContracts = useContractReader(readContracts, "TurbineInsuranceFactoryPolicy", "getInsurancePolicies", [
+    address,
+  ]);
 
-  //
-  // 🧫 DEBUG 👨🏻‍🔬
-  //
   useEffect(() => {
     if (
       DEBUG &&
@@ -184,7 +157,9 @@ function App(props) {
       yourMainnetBalance &&
       readContracts &&
       writeContracts &&
-      mainnetContracts
+      readContractInsured &&
+      writeContractInsured &&
+      allInsureContracts
     ) {
       console.log("🌎 mainnetProvider", mainnetProvider);
       console.log("🏠 localChainId", localChainId);
@@ -194,6 +169,9 @@ function App(props) {
       console.log("💵 yourMainnetBalance", yourMainnetBalance ? ethers.utils.formatEther(yourMainnetBalance) : "...");
       console.log("📝 readContracts", readContracts);
       console.log("🔐 writeContracts", writeContracts);
+      console.log("📝 readContractInsured", readContractInsured);
+      console.log("🔐 readContractInsured", readContractInsured);
+      console.log("🔐 allInsureContracts", allInsureContracts);
     }
   }, [
     mainnetProvider,
@@ -203,8 +181,9 @@ function App(props) {
     yourMainnetBalance,
     readContracts,
     writeContracts,
-    mainnetContracts,
     localChainId,
+    readContractInsured,
+    writeContractInsured,
   ]);
 
   const loadWeb3Modal = useCallback(async () => {
@@ -235,11 +214,12 @@ function App(props) {
     }
   }, [loadWeb3Modal]);
 
-  const faucetAvailable = localProvider && localProvider.connection && targetNetwork.name.indexOf("local") !== -1;
+  // const faucetAvailable = localProvider && localProvider.connection && targetNetwork.name.indexOf("local") !== -1;
 
   return (
     <div className="App">
       {/* ✏️ Edit the header and change the title to your project name */}
+      {/* <AppHeader /> */}
       <Header>
         {/* 👨‍💼 Your account is in the top right with a wallet at connect options */}
         <div style={{ position: "relative", display: "flex", flexDirection: "column" }}>
@@ -247,7 +227,7 @@ function App(props) {
             {USE_NETWORK_SELECTOR && (
               <div style={{ marginRight: 20 }}>
                 <NetworkSwitch
-                  networkOptions={networkOptions}
+                  networkOptions={"goerli"}
                   selectedNetwork={selectedNetwork}
                   setSelectedNetwork={setSelectedNetwork}
                 />
@@ -278,20 +258,90 @@ function App(props) {
         logoutOfWeb3Modal={logoutOfWeb3Modal}
         USE_NETWORK_SELECTOR={USE_NETWORK_SELECTOR}
       />
+
       <Menu style={{ textAlign: "center", marginTop: 20 }} selectedKeys={[location.pathname]} mode="horizontal">
-        <Menu.Item key="/debug">
+        <Menu.Item key="/">
+          <Link to="/">Home</Link>
+        </Menu.Item>
+        <Menu.Item key="/all-insurance">
+          <Link to="/all-insurance">All Insurance</Link>
+        </Menu.Item>
+        <Menu.Item key="/create-insurance">
+          <Link to="/create-insurance">Create And Read Insurance</Link>
+        </Menu.Item>
+        <Menu.Item key="/your-insurance">
+          <Link to="/your-insurance">Your Insurance</Link>
+        </Menu.Item>
+        {/* <Menu.Item key="/debug">
           <Link to="/debug">Debug Contracts</Link>
-        </Menu.Item>
-        <Menu.Item key="/createInsurance">
-          <Link to="/createInsurance">CreateInsurance</Link>
-        </Menu.Item>
-        <Menu.Item key="/allInsurances">
-          <Link to="/allInsurances">AllInsurances</Link>
-        </Menu.Item>
-        <Menu.Item key="/turbineInsurance">
-          <Link to="/turbineInsurance">TurbineInsurance</Link>
-        </Menu.Item>
+        </Menu.Item> */}
       </Menu>
+
+      <Switch>
+        <Route exact path="/">
+          <Home />
+        </Route>
+      </Switch>
+
+      <Switch>
+        <Route exact path="/all-insurance">
+          <Contract
+            name="TurbineInsuranceFactoryPolicy"
+            price={price}
+            signer={userSigner}
+            provider={localProvider}
+            address={address}
+            blockExplorer={blockExplorer}
+            contractConfig={contractConfig}
+          />
+          {/* <AllInsurance
+            address={address}
+            name="TurbineInsuranceFactoryPolicy"
+            price={price}
+            signer={userSigner}
+            provider={localProvider}
+            blockExplorer={blockExplorer}
+            contractConfig={contractConfig}
+          />  */}
+        </Route>
+      </Switch>
+
+      <Switch>
+        <Route exact path="/create-insurance">
+          <CreateInsurance
+            address={address}
+            name="TurbineInsuranceFactoryPolicy"
+            price={price}
+            signer={userSigner}
+            provider={localProvider}
+            blockExplorer={blockExplorer}
+            contractConfig={contractConfig}
+          />
+          {/* <Contract
+            name="TurbineInsuranceFactoryPolicy"
+            price={price}
+            signer={userSigner}
+            provider={localProvider}
+            blockExplorer={blockExplorer}
+            contractConfig={contractConfig}
+          /> */}
+        </Route>
+      </Switch>
+
+      <Switch>
+        <Route exact path="/your-insurance">
+          <YourInsurance />
+          {/* <Contract
+            name="TurbineInsure"
+            price={price}
+            signer={userSigner}
+            provider={localProvider}
+            address={"0x1905eFf8845374657A57Fc7c6b076687f7F50B95"}
+            blockExplorer={blockExplorer}
+            contractConfig={contractConfigTurbine}
+          /> */}
+        </Route>
+      </Switch>
 
       <Switch>
         <Route exact path="/debug">
@@ -307,6 +357,21 @@ function App(props) {
         </Route>
       </Switch>
 
+      <Divider />
+      <div className="site-footer" style={{ padding: "10px 20px" }}>
+        <div className="footer-items" style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
+          <p>
+            <a href="https://github.com/Lavishq/aquila-wind-farm-insurance/" target="_blank" rel="noreferrer">
+              <GithubFilled />
+            </a>
+          </p>
+          <p>|</p>
+          <p>
+            Built with <a href="https://github.com/scaffold-eth/scaffold-eth">🏗 Scaffold-ETH</a> at Chainlink Fall 2022
+            <a href="https://buidlguidl.com/" target="_blank" rel="noreferrer"></a>
+          </p>
+        </div>
+      </div>
       <ThemeSwitch />
     </div>
   );

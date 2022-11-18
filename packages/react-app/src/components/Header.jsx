@@ -9,13 +9,19 @@ export default function Header({ link, title, subTitle, ...props }) {
   return (
     <div style={{ display: "flex", justifyContent: "space-between", padding: "1.2rem" }}>
       <div style={{ display: "flex", flexDirection: "column", flex: 1, alignItems: "start" }}>
-        <a href={link} target="_blank" rel="noopener noreferrer">
-          <Title level={4} style={{ margin: "0 0.5rem 0 0" }}>
-            {title}
+        <a to="noopener noreferrer">
+          <Title
+            level={4}
+            style={{
+              margin: "0 0.5rem 0 0",
+              fontFamily: 'source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace',
+            }}
+          >
+            Turbine Insurance
           </Title>
         </a>
         <Text type="secondary" style={{ textAlign: "left" }}>
-          {subTitle}
+          Parametric Wind Farm Insurance
         </Text>
       </div>
       {props.children}
@@ -25,6 +31,4 @@ export default function Header({ link, title, subTitle, ...props }) {
 
 Header.defaultProps = {
   link: "/",
-  title: "Wind Turbine Insurance",
-  // subTitle: "",
 };
