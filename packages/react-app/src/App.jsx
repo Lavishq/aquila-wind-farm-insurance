@@ -139,14 +139,6 @@ function App(props) {
   //   console.log(`⛓ A new mainnet block is here: ${mainnetProvider._lastBlockNumber}`);
   // });
 
-  const contractConfigTurbine = { turbineContracts: turbineContracts || {} };
-  const readContractInsured = useContractLoader(localProvider, contractConfigTurbine);
-  const writeContractInsured = useContractLoader(userSigner, contractConfigTurbine, localChainId);
-
-  const allInsureContracts = useContractReader(readContracts, "TurbineInsuranceFactoryPolicy", "getInsurancePolicies", [
-    address,
-  ]);
-
   useEffect(() => {
     if (
       DEBUG &&
@@ -156,10 +148,7 @@ function App(props) {
       yourLocalBalance &&
       yourMainnetBalance &&
       readContracts &&
-      writeContracts &&
-      readContractInsured &&
-      writeContractInsured &&
-      allInsureContracts
+      writeContracts
     ) {
       console.log("🌎 mainnetProvider", mainnetProvider);
       console.log("🏠 localChainId", localChainId);
@@ -169,9 +158,6 @@ function App(props) {
       console.log("💵 yourMainnetBalance", yourMainnetBalance ? ethers.utils.formatEther(yourMainnetBalance) : "...");
       console.log("📝 readContracts", readContracts);
       console.log("🔐 writeContracts", writeContracts);
-      console.log("📝 readContractInsured", readContractInsured);
-      console.log("🔐 readContractInsured", readContractInsured);
-      console.log("🔐 allInsureContracts", allInsureContracts);
     }
   }, [
     mainnetProvider,
@@ -182,8 +168,6 @@ function App(props) {
     readContracts,
     writeContracts,
     localChainId,
-    readContractInsured,
-    writeContractInsured,
   ]);
 
   const loadWeb3Modal = useCallback(async () => {
@@ -263,11 +247,11 @@ function App(props) {
         <Menu.Item key="/">
           <Link to="/">Home</Link>
         </Menu.Item>
-        <Menu.Item key="/all-insurance">
-          <Link to="/all-insurance">All Insurance</Link>
+        <Menu.Item key="/insurane-factory">
+          <Link to="/insurance-factory">Insurance Factory</Link>
         </Menu.Item>
         <Menu.Item key="/create-insurance">
-          <Link to="/create-insurance">Create And Read Insurance</Link>
+          <Link to="/create-insurance">Create Insurance</Link>
         </Menu.Item>
         <Menu.Item key="/your-insurance">
           <Link to="/your-insurance">Your Insurance</Link>
@@ -284,7 +268,17 @@ function App(props) {
       </Switch>
 
       <Switch>
-        <Route exact path="/all-insurance">
+        <Route exact path="/insurance-factory">
+          <h1
+            style={{ margin: "1rem", fontFamily: 'source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace' }}
+          >
+            Read FactoryContract
+          </h1>
+          {/* <div style={{ border: "1px solid #cccccc", padding: 16, width: 600, margin: "auto", marginTop: 25 }}>
+          <h3><strong>Note: In createNewPolicy function don't forget to enter the same amount and same transaction value (both should be same numbers in wei) </strong></h3>
+          the reason for this is because transaction value has to be passed in a scaffold eth (issues)
+          <h4><em>Also, you can visit and read our deployed contract by clicking the below address.</em></h4>
+        </div> */}
           <Contract
             name="TurbineInsuranceFactoryPolicy"
             price={price}
@@ -319,33 +313,16 @@ function App(props) {
             contractConfig={contractConfig}
             price={price}
           />
-          {/* <Contract
-            name="TurbineInsuranceFactoryPolicy"
-            price={price}
-            signer={userSigner}
-            provider={localProvider}
-            blockExplorer={blockExplorer}
-            contractConfig={contractConfig}
-          /> */}
         </Route>
       </Switch>
 
       <Switch>
         <Route exact path="/your-insurance">
           <YourInsurance />
-          {/* <Contract
-            name="TurbineInsure"
-            price={price}
-            signer={userSigner}
-            provider={localProvider}
-            address={"0x1905eFf8845374657A57Fc7c6b076687f7F50B95"}
-            blockExplorer={blockExplorer}
-            contractConfig={contractConfigTurbine}
-          /> */}
         </Route>
       </Switch>
 
-      <Switch>
+      {/* <Switch>
         <Route exact path="/debug">
           <Contract
             name="TurbineInsuranceFactoryPolicy"
@@ -357,7 +334,7 @@ function App(props) {
             contractConfig={contractConfig}
           />
         </Route>
-      </Switch>
+      </Switch> */}
 
       <Divider />
       <div className="site-footer" style={{ padding: "10px 20px" }}>

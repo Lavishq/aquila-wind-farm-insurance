@@ -3,9 +3,7 @@ import Balance from "../components/Balance";
 import { Card, Button, Form, Input } from "antd";
 import React from "react";
 import { useState } from "react";
-// import { AddressInput } from "../components";
 import { Transactor } from "../helpers";
-import { useContractLoader } from "eth-hooks";
 import deployedContracts from "../contracts/hardhat_contracts.json";
 const { ethers } = require("ethers");
 
@@ -30,49 +28,36 @@ export default function CreateInsurance({
     console.log("Failed:", errorInfo);
   };
 
-  // const provider = new ethers.providers.Web3Provider(window.ethereum);
-  // const createNewInsurace = async (address) => {
-  //   const game = new ethers.Contract(address, abiContract, provider);
-  //   const result = await game.createNewPolicy(linkAddress, oracleAddress, amount, client, lat, lon, {
-  //     value: amount, gasLimit: 200000,
-  //   });
-  //   console.log(result);
-  // };
-
-  writeContracts = useContractLoader(signer, contractConfig, localChainId);
-
   const linkAddress = "0x326C977E6efc84E512bB9C30f76E30c160eD06FB";
   const oracleAddress = "0xB9756312523826A566e222a34793E414A81c88E1";
   const [client, setClient] = useState("0xBeA5dD2179E81C115b2008A8F89807Df66f3251c");
   const [amount, setAmount] = useState("1"); // just 1 wei
+  const [month, setMonth] = useState("1");
   const [lat, setLat] = useState("28.613939"); // 28.613939
   const [lon, setLon] = useState("97.209021"); // 97.209021
 
+  function clientHandler(event) {
+    setClient(event.target.value);
+  }
+  function amountHandler(event) {
+    setAmount(event.target.value);
+  }
+  function monthHandler(event) {
+    setMonth(event.target.value);
+  }
+  function latHandler(event) {
+    setLat(event.target.value);
+  }
+  function lonHandler(event) {
+    setLon(event.target.value);
+  }
+
   const tx = Transactor(signer, gasPrice);
 
-  // const onChange = (key) => {
-  //   setClient(key.client)
-  //   setAmount(key.amount)
-  //   setLat(key.lat)
-  //   setLon(key.log)
-  //   console.log(client)
-  //   console.log(amount)
-  //   console.log(lat)
-  //   console.log(lon)
-  // }
-
-  // const onFinished = (values) => {
-  //   console.log('Success:', values);
-  // };
-  // const onFinishFaileded = (errorInfo) => {
-  //   console.log('Failed:', errorInfo);
-  // };
-
   const createNewInsurace = async () => {
-    // console.log("fdududu")
     console.log(writeContracts[0]);
     await tx(
-      writeContracts.name.createNewPolicy(linkAddress, oracleAddress, amount, client, lat, lon, {
+      writeContracts.TurbineInsuranceFactoryPolicy.createNewPolicy(amount, client, month, lat, lon, {
         value: amount,
         gasLimit: 200000,
       }),
@@ -101,7 +86,7 @@ export default function CreateInsurance({
           name="basic"
           labelCol={{ span: 5 }}
           wrapperCol={{ span: 16 }}
-          initialValues={{ remember: true }}
+          initialValues={{ remember: false }}
           onFinish={onFinish}
           onFinishFailed={onFinishFailed}
           autoComplete="off"
@@ -117,7 +102,7 @@ export default function CreateInsurance({
           name="basic"
           labelCol={{ span: 5 }}
           wrapperCol={{ span: 16 }}
-          initialValues={{ remember: true }}
+          initialValues={{ remember: false }}
           onFinish={onFinish}
           onFinishFailed={onFinishFailed}
           autoComplete="off"
@@ -127,23 +112,23 @@ export default function CreateInsurance({
             name="clientAddress"
             rules={[{ required: true, message: "Please input Client Address" }, { whitespace: true }]}
           >
-            <Input placeholder="address" />
+            <Input placeholder="address" onChange={clientHandler} />
           </Form.Item>
           <Form.Item label="Amount" name="amount" rules={[{ required: true, message: "Please input Amount in ETH" }]}>
-            <Input placeholder="Amount in ETH" />
+            <Input placeholder="Amount in ETH (wei)" onChange={amountHandler} />
           </Form.Item>
           <Form.Item label="Months" name="month" rules={[{ required: true, message: "Please input Insurance Months" }]}>
-            <Input placeholder="5" />
+            <Input placeholder="5" onChange={monthHandler} />
           </Form.Item>
           <Form.Item label="Latitudes" name="lat" rules={[{ required: true, message: "Please input Latitudes" }]}>
-            <Input placeholder="28.613939" />
+            <Input placeholder="28.613939" onChange={latHandler} />
           </Form.Item>
           <Form.Item
             label="Longitudes"
             name="lon"
             rules={[{ required: true, message: "Please input your Longitudes" }]}
           >
-            <Input placeholder="97.209021" />
+            <Input placeholder="97.209021" onChange={lonHandler} />
           </Form.Item>
           <Button onClick={createNewInsurace} type="primary" htmlType="submit">
             Submit

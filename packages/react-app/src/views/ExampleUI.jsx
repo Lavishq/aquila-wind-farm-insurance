@@ -1,221 +1,122 @@
-import { Button, Card, DatePicker, Divider, Input, Progress, Slider, Spin, Switch } from "antd";
-import React, { useState } from "react";
-import { utils } from "ethers";
-import { SyncOutlined } from "@ant-design/icons";
-
-import { Address, Balance, Events } from "../components";
-
-export default function ExampleUI({
-  purpose,
-  address,
-  mainnetProvider,
-  localProvider,
-  yourLocalBalance,
-  price,
-  tx,
-  readContracts,
-  writeContracts,
-}) {
-  const [newPurpose, setNewPurpose] = useState("loading...");
-
+export default function ExampleUI({}) {
   return (
     <div>
-      {/*
-        ⚙️ Here is an example UI that displays and sets the purpose in your smart contract:
-      */}
-      <div style={{ border: "1px solid #cccccc", padding: 16, width: 400, margin: "auto", marginTop: 64 }}>
-        <h2>Example UI:</h2>
-        <h4>purpose: {purpose}</h4>
-        <Divider />
-        <div style={{ margin: 8 }}>
-          <Input
-            onChange={e => {
-              setNewPurpose(e.target.value);
-            }}
-          />
-          <Button
-            style={{ marginTop: 8 }}
-            onClick={async () => {
-              /* look how you call setPurpose on your contract: */
-              /* notice how you pass a call back for tx updates too */
-              const result = tx(writeContracts.YourContract.setPurpose(newPurpose), update => {
-                console.log("📡 Transaction Update:", update);
-                if (update && (update.status === "confirmed" || update.status === 1)) {
-                  console.log(" 🍾 Transaction " + update.hash + " finished!");
-                  console.log(
-                    " ⛽️ " +
-                      update.gasUsed +
-                      "/" +
-                      (update.gasLimit || update.gas) +
-                      " @ " +
-                      parseFloat(update.gasPrice) / 1000000000 +
-                      " gwei",
-                  );
-                }
-              });
-              console.log("awaiting metamask/web3 confirm result...", result);
-              console.log(await result);
-            }}
-          >
-            Set Purpose!
-          </Button>
-        </div>
-        <Divider />
-        Your Address:
-        <Address address={address} ensProvider={mainnetProvider} fontSize={16} />
-        <Divider />
-        ENS Address Example:
-        <Address
-          address="0x34aA3F359A9D614239015126635CE7732c18fDF3" /* this will show as austingriffith.eth */
-          ensProvider={mainnetProvider}
-          fontSize={16}
-        />
-        <Divider />
-        {/* use utils.formatEther to display a BigNumber: */}
-        <h2>Your Balance: {yourLocalBalance ? utils.formatEther(yourLocalBalance) : "..."}</h2>
-        <div>OR</div>
-        <Balance address={address} provider={localProvider} price={price} />
-        <Divider />
-        <div>🐳 Example Whale Balance:</div>
-        <Balance balance={utils.parseEther("1000")} provider={localProvider} price={price} />
-        <Divider />
-        {/* use utils.formatEther to display a BigNumber: */}
-        <h2>Your Balance: {yourLocalBalance ? utils.formatEther(yourLocalBalance) : "..."}</h2>
-        <Divider />
-        Your Contract Address:
-        <Address
-          address={readContracts && readContracts.YourContract ? readContracts.YourContract.address : null}
-          ensProvider={mainnetProvider}
-          fontSize={16}
-        />
-        <Divider />
-        <div style={{ margin: 8 }}>
-          <Button
-            onClick={() => {
-              /* look how you call setPurpose on your contract: */
-              tx(writeContracts.YourContract.setPurpose("🍻 Cheers"));
-            }}
-          >
-            Set Purpose to &quot;🍻 Cheers&quot;
-          </Button>
-        </div>
-        <div style={{ margin: 8 }}>
-          <Button
-            onClick={() => {
-              /*
-              you can also just craft a transaction and send it to the tx() transactor
-              here we are sending value straight to the contract's address:
-            */
-              tx({
-                to: writeContracts.YourContract.address,
-                value: utils.parseEther("0.001"),
-              });
-              /* this should throw an error about "no fallback nor receive function" until you add it */
-            }}
-          >
-            Send Value
-          </Button>
-        </div>
-        <div style={{ margin: 8 }}>
-          <Button
-            onClick={() => {
-              /* look how we call setPurpose AND send some value along */
-              tx(
-                writeContracts.YourContract.setPurpose("💵 Paying for this one!", {
-                  value: utils.parseEther("0.001"),
-                }),
-              );
-              /* this will fail until you make the setPurpose function payable */
-            }}
-          >
-            Set Purpose With Value
-          </Button>
-        </div>
-        <div style={{ margin: 8 }}>
-          <Button
-            onClick={() => {
-              /* you can also just craft a transaction and send it to the tx() transactor */
-              tx({
-                to: writeContracts.YourContract.address,
-                value: utils.parseEther("0.001"),
-                data: writeContracts.YourContract.interface.encodeFunctionData("setPurpose(string)", [
-                  "🤓 Whoa so 1337!",
-                ]),
-              });
-              /* this should throw an error about "no fallback nor receive function" until you add it */
-            }}
-          >
-            Another Example
-          </Button>
-        </div>
+      <div style={{ border: "1px solid #cccccc", padding: 16, width: 600, margin: "auto", marginTop: 25 }}>
+        <h2>
+          <strong>How does this work?</strong>
+        </h2>
+        <h4 style={{ padding: 14 }}>
+          The Insurer interacts with the FactoryContract i.e. TurbineInsuranceFactoryPolicy (contract) and creates a
+          policy. When creating the policy the the FactoryContract creates another contract i.e. TurbineInsure
+          (contract) which stores all the state of the contract like windSpeed, amount, client, insurer, months the
+          contract is insured as well as exact location in the form of latitudes and longitudes.
+        </h4>
+        <h4 style={{ padding: 14 }}>
+          And If the client sees that the windSpeed is slow through whatever source he used to aquire the information
+          then he can call the updateState function of the contract using the frontend which triggers the decentralised
+          api call of Accuweather DataFeed Provider and state changes but every call costs 0.1 LINK token (from the
+          insurance contract) . So it is important to make sure if the InsuraceContract has link.
+        </h4>
+        <h3>
+          <strong> Technical explanation of InsuranceContract payout function</strong>
+        </h3>
+        <h4 style={{ padding: 14 }}>
+          A function compares between two timestamps and if the windSpeed was below 15 mph for 6 hours and the api was
+          called more than 4 times ( i.e. 5 times ) as well as a boolean value of contract is true then the payout
+          function is triggers. Else if the windSpeed increases above 15 mph even once and then it was called so the
+          boolean value is changed to false and there is no payout.
+        </h4>
       </div>
-
-      {/*
-        📑 Maybe display a list of events?
-          (uncomment the event and emit line in YourContract.sol! )
-      */}
-      <Events
-        contracts={readContracts}
-        contractName="YourContract"
-        eventName="SetPurpose"
-        localProvider={localProvider}
-        mainnetProvider={mainnetProvider}
-        startBlock={1}
-      />
-
-      <div style={{ width: 600, margin: "auto", marginTop: 32, paddingBottom: 256 }}>
-        <Card>
-          Check out all the{" "}
-          <a
-            href="https://github.com/austintgriffith/scaffold-eth/tree/master/packages/react-app/src/components"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            📦 components
-          </a>
-        </Card>
-
-        <Card style={{ marginTop: 32 }}>
-          <div>
-            There are tons of generic components included from{" "}
-            <a href="https://ant.design/components/overview/" target="_blank" rel="noopener noreferrer">
-              🐜 ant.design
-            </a>{" "}
-            too!
-          </div>
-
-          <div style={{ marginTop: 8 }}>
-            <Button type="primary">Buttons</Button>
-          </div>
-
-          <div style={{ marginTop: 8 }}>
-            <SyncOutlined spin /> Icons
-          </div>
-
-          <div style={{ marginTop: 8 }}>
-            Date Pickers?
-            <div style={{ marginTop: 2 }}>
-              <DatePicker onChange={() => {}} />
-            </div>
-          </div>
-
-          <div style={{ marginTop: 32 }}>
-            <Slider range defaultValue={[20, 50]} onChange={() => {}} />
-          </div>
-
-          <div style={{ marginTop: 32 }}>
-            <Switch defaultChecked onChange={() => {}} />
-          </div>
-
-          <div style={{ marginTop: 32 }}>
-            <Progress percent={50} status="active" />
-          </div>
-
-          <div style={{ marginTop: 32 }}>
-            <Spin />
-          </div>
-        </Card>
+      <div style={{ border: "1px solid #cccccc", padding: 16, width: 600, margin: "auto", marginTop: 25 }}>
+        <h2>
+          <strong>How to interact our dapp?</strong>
+        </h2>
+        <h4>
+          <ins>
+            <strong>note</strong>: important fucntions explained are in{" "}
+            <em>
+              <strong>bold</strong>
+            </em>
+            and
+            <em>
+              <strong>write contracts</strong>
+            </em>{" "}
+            is in <em>italic as well as bold</em> and{" "}
+            <em>
+              <strong>read contract</strong>
+            </em>{" "}
+            is in{" "}
+            <strong>
+              <em>italic</em>
+            </strong>
+          </ins>
+        </h4>
+        <h3>
+          <strong>
+            The interaction is at <strong>Insurance Factory</strong> through Navbar
+          </strong>
+        </h3>
+        <h4 style={{ padding: 14 }}>
+          <em>
+            <ins>clientOwnership</ins>
+          </em>{" "}
+          mapping takes address of a client and uint256 to return the InsuranceContract{" "}
+        </h4>
+        <h4 style={{ padding: 14 }}>
+          <em>
+            <ins>insurerOwnership</ins>
+          </em>{" "}
+          mapping takes address of a insurer and uint256 to return the InsuranceContract{" "}
+        </h4>
+        <h4 style={{ padding: 14 }}>
+          <strong>
+            <ins>createNewPolicy</ins>
+          </strong>{" "}
+          creates a new Insurance which takes amount, clientAddress, months the contract is supposed to be insured as
+          well as exact location in the form of lat (latitudes) and lon (longitudes). msg.sender is insurer, please make
+          sure to enter the amount in transaction value as well{" "}
+        </h4>
+        <h4 style={{ padding: 14 }}>
+          <em>
+            <ins>getClientPolicies</ins>
+          </em>{" "}
+          will display all the insurances (contract) that you bought
+        </h4>
+        <h4 style={{ padding: 14 }}>
+          <em>
+            <ins>getInsurerPolicies</ins>
+          </em>{" "}
+          will display all the insurances (contract) that you created for your client, if any{" "}
+        </h4>
+        <h4 style={{ padding: 14 }}>
+          <em>
+            <ins>getInsurancePolicies</ins>
+          </em>{" "}
+          will display all the insurances displayed using FactoryContract i.e. TurbineInsuranceFactoryPolicy (contract){" "}
+        </h4>
+        <h4 style={{ padding: 14 }}>
+          <em>
+            <ins>insurancePolicies</ins>
+          </em>{" "}
+          mapping takes uint256 and return the contract mapped at that uint256{" "}
+        </h4>
+        <h4 style={{ padding: 14 }}>
+          <strong>
+            <ins>updateStateOfAllContracts</ins>
+          </strong>{" "}
+          updates all the insurances state ( variables like timestamps, windSpeed, etc) by calling updateState to all
+          the insurances
+        </h4>
       </div>
     </div>
   );
+}
+{
+  /* <a
+  href="https://github.com/austintgriffith/scaffold-eth/tree/master/packages/react-app/src/components"
+  target="_blank"
+  rel="noopener noreferrer"
+>
+  📦 components
+</a> */
 }

@@ -1,9 +1,28 @@
-# 🏗 Scaffold-ETH
+# Parametric Wind Farm Insurance
 
-> everything you need to build on Ethereum! 🚀
+## Live Site
+[See Live](http://paramerteric.wind-turbine-insurance.surge.sh/)
+
+## Verified Contracts
+[Here](https://goerli.etherscan.io/address/0x4952c0F78e63b775FbA724B9DB0f30b0Da86c1F4)
+
+## Github Code
+[Repo](https://github.com/Lavishq/aquila-wind-farm-insurance/)
+[Frontend](https://github.com/Lavishq/aquila-wind-farm-insurance/tree/main/packages/react-app/src)
+[Contract](https://github.com/Lavishq/aquila-wind-farm-insurance/tree/main/packages/hardhat/contracts)
+
+## Docs
+[Here](https://docs.google.com/presentation/d/1sLjVVxpG8c7udRrJ7MEVNxwlQ5oeFwimpgNZk7x4zYQ/edit#slide=id.p)
+
+## Tech 
 > This Project is built using scaffold-ETH
+> Solidity
+> React
+> Harthat
+> Chainlink Accuweather Api
+> Goerli Testnet
 
-# 🏄‍♂️ Quick Start
+## 🏄‍♂️ Quick Start
 
 Prerequisites: [Node (v16 LTS)](https://nodejs.org/en/download/) plus [Yarn (v1.x)](https://classic.yarnpkg.com/en/docs/install/) and [Git](https://git-scm.com/downloads)
 
@@ -19,7 +38,6 @@ cd scaffold-eth
 yarn install
 yarn start
 ```
-
 
 🔏 Smart contracts are in `packages/hardhat/contracts` 
 https://github.com/Lavishq/aquila-wind-farm-insurance/tree/main/packages/hardhat/contracts
